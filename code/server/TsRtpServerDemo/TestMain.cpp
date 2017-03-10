@@ -11,8 +11,12 @@
 #include "test_ts_rtp_server.h"
 
 
-int main(void) {
+int main(int argc,char ** argv) {
 	puts("Hello World!!!");
-	test_ts_rtp_server();
+	if(argc != 2)
+	{
+		test_ts_rtp_server();
+	}
+	test_ts_rtp_server(argv[1]);
 	return EXIT_SUCCESS;
 }

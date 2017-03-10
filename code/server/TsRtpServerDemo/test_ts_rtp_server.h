@@ -9,5 +9,6 @@
 #define TEST_TS_RTP_SERVER_H_
 
 void test_ts_rtp_server(void);
+void test_ts_rtp_server(const char * file);
 
 #endif /* TEST_TS_RTP_SERVER_H_ */

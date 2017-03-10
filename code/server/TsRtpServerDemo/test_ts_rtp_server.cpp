@@ -51,42 +51,52 @@ void sequence_number_increase(struct rtp_header *header){
     header->sequence_number = htons(sequence);
 }
 
+void startServer(const char * file)
+{
+	 // RTP Packet we will send
+		char buf[MTU];
+		unsigned int count = 0;
+		// Init RTP Header
+		init_rtp_header((struct rtp_header*)buf);
+		count = sizeof(struct rtp_header);
+		// Init socket
+		int sock = socket(AF_INET, SOCK_DGRAM, 0);
+		struct sockaddr_in dest_addr;
+		dest_addr.sin_family=AF_INET;
+		dest_addr.sin_port = htons(5004);
+		dest_addr.sin_addr.s_addr = INADDR_ANY;
+		bzero(&(dest_addr.sin_zero),8);
+		// Open TS file
+		FILE *ts_file = fopen(file, "r+");
+		while(!feof(ts_file))
+		{
+		    int read_len = fread(buf+count, 1, TS_PACKET_SIZE, ts_file);
+		    if(*(buf+count) != 0x47)
+		    {
+		        fprintf(stderr, "Bad sync header!\n");
+		        continue;
+		    } // end if
+		    count += read_len;
+
+		    if (count + TS_PACKET_SIZE > MTU)
+		    {// We should send
+		        sequence_number_increase((struct rtp_header*)buf);
+		        sendto(sock, buf, count, 0, (const struct sockaddr*)&dest_addr, sizeof(dest_addr));
+		        count = sizeof(struct rtp_header);
+		        usleep(10000);
+		    } // endif
+		}//endwhile
+}
+
 void test_ts_rtp_server(void)
 {
 	const char * TAG = "test_ts_rtp_server()";
 	cout<<TAG<<",RUN..."<<endl;
+	startServer("/home/pixboly/Downloads/catandmouse.ts");
 
-	 // RTP Packet we will send
-	char buf[MTU];
-	unsigned int count = 0;
-	// Init RTP Header
-	init_rtp_header((struct rtp_header*)buf);
-	count = sizeof(struct rtp_header);
-	// Init socket
-	int sock = socket(AF_INET, SOCK_DGRAM, 0);
-	struct sockaddr_in dest_addr;
-	dest_addr.sin_family=AF_INET;
-	dest_addr.sin_port = htons(5004);
-	dest_addr.sin_addr.s_addr = INADDR_ANY;
-	bzero(&(dest_addr.sin_zero),8);
-	// Open TS file
-	FILE *ts_file = fopen("/home/pixboly/Downloads/catandmouse.ts", "r+");
-	while(!feof(ts_file))
-	{
-	    int read_len = fread(buf+count, 1, TS_PACKET_SIZE, ts_file);
-	    if(*(buf+count) != 0x47)
-	    {
-	        fprintf(stderr, "Bad sync header!\n");
-	        continue;
-	    } // end if
-	    count += read_len;
+}
 
-	    if (count + TS_PACKET_SIZE > MTU)
-	    {// We should send
-	        sequence_number_increase((struct rtp_header*)buf);
-	        sendto(sock, buf, count, 0, (const struct sockaddr*)&dest_addr, sizeof(dest_addr));
-	        count = sizeof(struct rtp_header);
-	        usleep(10000);
-	    } // endif
-	}//endwhile
+void test_ts_rtp_server(const char * file)
+{
+	startServer(file);
 }
