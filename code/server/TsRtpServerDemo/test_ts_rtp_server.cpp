@@ -83,7 +83,7 @@ void startServer(const char * file)
 		        sequence_number_increase((struct rtp_header*)buf);
 		        sendto(sock, buf, count, 0, (const struct sockaddr*)&dest_addr, sizeof(dest_addr));
 		        count = sizeof(struct rtp_header);
-		        usleep(10000);
+		        usleep(100);
 		    } // endif
 		}//endwhile
 }
@@ -98,5 +98,7 @@ void test_ts_rtp_server(void)
 
 void test_ts_rtp_server(const char * file)
 {
+	const char * TAG = "test_ts_rtp_server(file)";
+		cout<<TAG<<",file"<<file<<endl;
 	startServer(file);
 }
